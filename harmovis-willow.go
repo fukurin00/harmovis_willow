@@ -41,8 +41,8 @@ var (
 )
 
 const (
-	latBase = 35.181453  //
-	lonBase = 136.906428 //
+	latBase = 35.181553  //
+	lonBase = 136.906128 //
 	xscale  = 9.109
 	yscale  = 11.094
 )
@@ -114,9 +114,10 @@ func run_server() *gosocketio.Server {
 
 	return server
 }
-type LineMarker struct{
+
+type LineMarker struct {
 	From []float64 `json:"from"`
-	To []float64`json:"to"`
+	To   []float64 `json:"to"`
 }
 
 type MapMarker struct {
@@ -158,21 +159,6 @@ type Pose struct {
 	} `json:"pose"`
 }
 
-type HumanPose struct {
-	Header struct {
-		Seq   int `json:"seq"`
-		Stamp struct {
-			Secs  int `json:"secs"`
-			Nsecs int `json:"nsecs"`
-		} `json:"stamp"`
-		FrameID int `json:"frame_id"`
-	} `json:"header"`
-	Pose struct {
-		Pos Position    `json:"position"`
-		Ori Orientation `json:"orientation"`
-	} `json:"pose"`
-}
-
 var (
 	eventTimeStamp  int64 = 0
 	agent1TimeStamp int64 = 0
@@ -180,8 +166,8 @@ var (
 )
 
 func (m *MapMarker) GetJson() string {
-	s := fmt.Sprintf("{\"mtype\":%d,\"id\":%d,\"lat\":%f,\"lon\":%f,\"angle\":%f,\"speed\":%d,\"ts\":%d.%03d}",
-		m.mtype, m.id, m.lat, m.lon, m.angle, m.speed, m.ts, m.tsnano)
+	s := fmt.Sprintf("{\"mtype\":%d,\"id\":%d,\"lat\":%f,\"lon\":%f,\"angle\":%f,\"speed\":%d,\"ts\":%s}",
+		m.mtype, m.id, m.lat, m.lon, m.angle, m.speed, time.Unix(m.ts, m.tsnano).Format(time.RFC3339))
 	return s
 }
 func (m *MapMarker) GetJsonTime() string {
@@ -395,8 +381,8 @@ func supplyMQTTCallback(clt *sxutil.SXServiceClient, sp *api.Supply) {
 	nanoTimeStamp := sp.Ts.AsTime().UnixNano()
 	if err == nil {
 		var rid int32
-		if strings.HasPrefix(mqttRCD.Topic, "robot/pose") {
-			n, nerr := fmt.Sscanf(mqttRCD.Topic, "robot/pose/%d", &rid)
+		if strings.HasPrefix(mqttRCD.Topic, "robot/position") {
+			n, nerr := fmt.Sscanf(mqttRCD.Topic, "robot/position/%d", &rid)
 			if n == 1 && nerr == nil { // robot pose into location
 				if rid < 10 {
 					rid += 100 // we just check for different name space for agent and robot.
